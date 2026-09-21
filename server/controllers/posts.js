@@ -24,7 +24,8 @@ const createPost = async (req, res) => {
 		res.status(201).json(post);
 	}
 	catch (err) {
-		res.status(409).json({ message: err.message })
+		console.error(err);
+		res.status(500).json({ message: "Internal server error" });
 	}
 }
 
@@ -36,7 +37,8 @@ const getFeedPost = async (req, res) => {
 		res.status(200).json(post);
 	}
 	catch (err) {
-		res.status(404).json({ message: err.message })
+		console.error(err);
+		res.status(500).json({ message: "Internal server error" });
 	}
 }
 
@@ -47,7 +49,8 @@ const getUserPost = async (req, res) => {
 		res.status(200).json(post);
 	}
 	catch (err) {
-		res.status(404).json({ message: err.message })
+		console.error(err);
+		res.status(500).json({ message: "Internal server error" });
 	}
 }
 
@@ -75,7 +78,8 @@ const likePost = async (req, res) => {
 		res.status(200).json(updatedPost);
 	}
 	catch (err) {
-		res.status(404).json({ message: err.message })
+		console.error(err);
+		res.status(500).json({ message: "Internal server error" });
 	}
 }
 
