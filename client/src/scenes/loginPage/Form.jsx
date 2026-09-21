@@ -62,8 +62,6 @@ const Form = () => {
 		for (let value in values) {
 			formData.append(value, values[value]);
 		}
-		formData.append("picturePath", values.picture.name);
-
 		const savedUserResponse = await fetch(
 			`${process.env.REACT_APP_BACKEND_URL}/auth/register`,
 			{
@@ -193,10 +191,18 @@ const Form = () => {
 									p="1rem"
 								>
 									<Dropzone
-										acceptedFiles=".jpg,.jpeg,.png"
+										accept={{
+											"image/jpeg": [".jpg", ".jpeg"],
+											"image/png": [".png"],
+											"image/webp": [".webp"],
+										}}
+										maxSize={2 * 1024 * 1024}
 										multiple={false}
-										onDrop={(acceptedFiles) =>
-											setFieldValue("picture", acceptedFiles[0])
+										onDrop={(acceptedFiles) => {
+											if (acceptedFiles[0]) setFieldValue("picture", acceptedFiles[0]);
+										}}
+										onDropRejected={() =>
+											alert("Only JPEG, PNG, or WebP images up to 2MB are allowed")
 										}
 									>
 										{({ getRootProps, getInputProps }) => (
