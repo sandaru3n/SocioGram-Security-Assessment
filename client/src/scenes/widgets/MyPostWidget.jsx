@@ -44,7 +44,6 @@ const MyPostWidget = ({ picturePath }) => {
 		formData.append("description", post);
 		if (image) {
 			formData.append("picture", image);
-			formData.append("picturePath", image.name);
 		}
 
 		const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/posts`, {
@@ -53,6 +52,10 @@ const MyPostWidget = ({ picturePath }) => {
 			body: formData,
 		});
 		const posts = await response.json();
+		if (!response.ok) {
+			alert(posts.error || posts.message || "Could not create post");
+			return;
+		}
 		dispatch(setPosts({ posts }));
 		setImage(null);
 		setPost("");
@@ -82,9 +85,19 @@ const MyPostWidget = ({ picturePath }) => {
 					p="1rem"
 				>
 					<Dropzone
-						acceptedFiles=".jpg,.jpeg,.png"
+						accept={{
+							"image/jpeg": [".jpg", ".jpeg"],
+							"image/png": [".png"],
+							"image/webp": [".webp"],
+						}}
+						maxSize={2 * 1024 * 1024}
 						multiple={false}
-						onDrop={(acceptedFiles) => setImage(acceptedFiles[0])}
+						onDrop={(acceptedFiles) => {
+							if (acceptedFiles[0]) setImage(acceptedFiles[0]);
+						}}
+						onDropRejected={() =>
+							alert("Only JPEG, PNG, or WebP images up to 2MB are allowed")
+						}
 					>
 						{({ getRootProps, getInputProps }) => (
 							<FlexBetween>
