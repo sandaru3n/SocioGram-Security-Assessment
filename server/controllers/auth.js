@@ -10,11 +10,15 @@ export const register = async (req, res) => {
       lastName,
       email,
       password,
-      picturePath,
       friends,
       location,
       occupation,
     } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ error: "A profile image is required" });
+    }
+    const picturePath = req.file.filename;
 
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
