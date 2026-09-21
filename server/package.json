@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "dev": "nodemon index.js",
+    "start": "node --use-system-ca index.js",
+    "dev": "nodemon --exec \"node --use-system-ca\" index.js",
     "audit": "npm audit --omit=dev",
     "audit:fix": "npm audit fix"
   },
