@@ -1,0 +1,42 @@
+-'express';
+//It simplifies the process of defining routes, handling HTTP requests and responses, and building APIs.
+
+-'body-parser';
+//parse incoming request bodies in a middleware before your handlers, making it available under the req.body property.
+
+-'mongoose';
+// Mongoose is an Object Data Modeling (ODM) library for MongoDB and Node.js.
+
+-"cors";
+// Cross-Origin Resource Sharing (CORS) is a security feature implemented by web browsers that restricts web pages from making requests to a different domain than the one that served the web page
+// enable CORS for Express app, to get API request from different origins.
+
+-"dotenv";
+// allows you to load environment variables from a .env file into process.env
+
+-'multer';
+// uploading files
+
+-'helmet';
+// security middleware that helps protect your Express app by setting various HTTP headers to prevent common security vulnerabilities, like cross-site scripting (XSS) attacks, clickjacking,
+
+-'morgan';
+// logging middleware that automatically logs HTTP requests made to your server. (req,status,responseTime...)
+
+-"path";
+// handle file and directory paths
+
+-import { fileURLToPath } from 'url';
+//  convert a file URL to a local file path.
+
+status code 201 meaning something has been created
+
+if any error , mongoDB will send status code 500 which will be recieved to frontend
+
+use Pesticide for Chrome : browser extension to see the components flex-box, flex and all .. recommended
+
+fontSize="clamp(1rem,2rem,2.25rem)" // clamp is a function w can use in css that determines 1rem(minimum),2rem(default),2.25rem(maximum)... value for the font 
+it will always be the default value but just in case thee screen sizer gets too small the font size will change..
+
+yup : form validation : show error if incorrect + required
+yup.object().shape() ======= regex automation
