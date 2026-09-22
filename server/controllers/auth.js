@@ -18,6 +18,14 @@ export const register = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "A profile image is required" });
     }
+
+    // Prevent NoSQL Injection by ensuring email is strictly a string
+    const safeEmail = String(email);
+    const existingUser = await User.findOne({ email: safeEmail });
+    if (existingUser) {
+      return res.status(400).json({ error: "An account with this email already exists." });
+    }
+
     const picturePath = req.file.filename;
 
     const salt = await bcrypt.genSalt();
@@ -47,17 +55,44 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email: email });
+
+    // Prevent NoSQL Injection by ensuring inputs are strictly strings
+    const safeEmail = String(email);
+    const safePassword = String(password);
+
+    const user = await User.findOne({ email: safeEmail });
     if (!user) return res.status(400).json({ msg: "User does not exist. " });
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(safePassword, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid credentials. " });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-    delete user.password;
-    return res.status(200).json({ token, user });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000, // 1 hour — matches JWT expiry
+      path: "/",
+    });
+
+    return res.status(200).json({ user: userObj });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+/* LOGGING OUT */
+export const logout = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+  });
+  return res.status(200).json({ msg: "Logged out successfully" });
+};
+
