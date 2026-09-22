@@ -8,15 +8,14 @@ import { Box, Typography, Divider, useTheme } from "@mui/material";
 import UserImage from '../../components/UserImage';
 import FlexBetween from '../../components/flexBetween';
 import WidgetWrapper from '../../components/WidgetWrapper';
-import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 
 const UserWidget = ({ userId, picturePath }) => {
 	const [user, setUser] = useState(null);
 	const { palette } = useTheme();
 	const navigate = useNavigate();
-	const token = useSelector((state) => state.token);
 	const dark = palette.neutral.dark;
 	const medium = palette.neutral.medium;
 	const main = palette.neutral.main;
@@ -24,11 +23,12 @@ const UserWidget = ({ userId, picturePath }) => {
 	const getUser = async () => {
 		const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/users/${userId}`, {
 			method: "GET",
-			headers: { Authorization: `Bearer ${token}` },
+			credentials: "include",
 		});
 		const data = await response.json();
 		setUser(data);
 	};
+
 
 	useEffect(() => {
 		getUser();

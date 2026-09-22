@@ -5,6 +5,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
 import postRoutes from "./routes/posts.js";
@@ -12,6 +13,8 @@ import { register } from "./controllers/auth.js";
 import { createPost } from "./controllers/posts.js";
 import { verifyToken } from './middleware/middlewareAuth.js';
 import { uploadImage, serveAsset } from "./middleware/upload.js";
+import { authLimiter } from "./middleware/rateLimit.js";
+
 // import User from './models/User.js';
 // import Post from "./models/Post.js";
 // import { users, posts } from "./data/index.js";
@@ -39,9 +42,11 @@ const allowedOrigins = process.env.CORS_ORIGIN
 
 const corsOptions = {
   origin: allowedOrigins,
+  credentials: true,
   preflightContinue: false,
   optionsSuccessStatus: 204,
 };
+
 
 const app = express();
 
@@ -78,12 +83,15 @@ app.use(express.json());
 app.use(morgan("common"));
 app.use(bodyParser.json({ limit: "30mb", extended: true }));
 app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
+app.use(cookieParser());
+
 app.get("/assets/:filename", serveAsset);
 app.options("*", cors(corsOptions));
 
 /* ROUTES WITH FILES */
-app.post("/auth/register", uploadImage, register);
+app.post("/auth/register", authLimiter, uploadImage, register);
 app.post("/posts", verifyToken, uploadImage, createPost);
+
 
 /* ROUTES */
 app.use("/auth", authRoutes);

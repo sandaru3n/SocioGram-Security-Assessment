@@ -7,7 +7,6 @@ import { setFriends } from '../../state';
 const FriendListWidget = ({ userId }) => {
 	const dispatch = useDispatch();
 	const { palette } = useTheme();
-	const token = useSelector((state) => state.token);
 	const friends = useSelector((state) => state.user.friends);
 
 	const getFriends = async () => {
@@ -15,12 +14,13 @@ const FriendListWidget = ({ userId }) => {
 			`${process.env.REACT_APP_BACKEND_URL}/users/${userId}/friends`,
 			{
 				method: "GET",
-				headers: { Authorization: `Bearer ${token}` },
+				credentials: "include",
 			}
 		);
 		const data = await response.json();
 		dispatch(setFriends({ friends: data }));
 	};
+
 
 	useEffect(() => {
 		getFriends();
