@@ -6,12 +6,11 @@ import PostWidget from "./PostWidget";
 const PostsWidget = ({ userId, isProfile = false }) => {
 	const dispatch = useDispatch();
 	const posts = useSelector((state) => state.posts);
-	const token = useSelector((state) => state.token);
 
 	const getPosts = async () => {
 		const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/posts`, {
 			method: "GET",
-			headers: { Authorization: `Bearer ${token}` },
+			credentials: "include",
 		});
 		const data = await response.json();
 		dispatch(setPosts({ posts: data }));
@@ -22,12 +21,13 @@ const PostsWidget = ({ userId, isProfile = false }) => {
 			`${process.env.REACT_APP_BACKEND_URL}/posts/${userId}/posts`,
 			{
 				method: "GET",
-				headers: { Authorization: `Bearer ${token}` },
+				credentials: "include",
 			}
 		);
 		const data = await response.json();
 		dispatch(setPosts({ posts: data }));
 	};
+
 
 	useEffect(() => {
 		if (isProfile) {

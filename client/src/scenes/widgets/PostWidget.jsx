@@ -20,7 +20,6 @@ const PostWidget = ({
 }) => {
 	const [isComments, setIsComments] = useState(false);
 	const dispatch = useDispatch();
-	const token = useSelector((state) => state.token);
 	const loggedInUserId = useSelector((state) => state.user._id);
 	const isLiked = Boolean(likes[loggedInUserId]);
 	const likeCount = Object.keys(likes).length;
@@ -33,14 +32,15 @@ const PostWidget = ({
 		const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/posts/${postId}/like`, {
 			method: "PATCH",
 			headers: {
-				Authorization: `Bearer ${token}`,
 				"Content-Type": "application/json",
 			},
+			credentials: "include",
 			body: JSON.stringify({ userId: loggedInUserId }),
 		});
 		const updatedPost = await response.json();
 		dispatch(setPost({ post: updatedPost }));
 	};
+
 
 	return (
 		<WidgetWrapper m="2rem 0">

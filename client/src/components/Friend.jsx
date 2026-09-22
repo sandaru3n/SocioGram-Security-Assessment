@@ -10,7 +10,6 @@ const Friend = ({ friendId, name, subtitle, userPicturePath }) => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 	const { _id } = useSelector((state) => state.user);
-	const token = useSelector((state) => state.token);
 	const friends = useSelector((state) => state.user.friends);
 
 	const { palette } = useTheme();
@@ -28,9 +27,9 @@ const Friend = ({ friendId, name, subtitle, userPicturePath }) => {
 				{
 					method: "PATCH",
 					headers: {
-						Authorization: `Bearer ${token}`,
 						"Content-Type": "application/json",
 					},
+					credentials: "include",
 				}
 			);
 
@@ -48,6 +47,7 @@ const Friend = ({ friendId, name, subtitle, userPicturePath }) => {
 			// Handle the error as needed, for example, show a message to the user or log it
 		}
 	};
+
 
 	return (
 		<FlexBetween>

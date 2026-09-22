@@ -67,6 +67,7 @@ const Form = () => {
 			{
 				method: "POST",
 				body: formData,
+				credentials: "include",
 			}
 		);
 		const savedUser = await savedUserResponse.json();
@@ -79,19 +80,14 @@ const Form = () => {
 	};
 
 	const login = async (values, onSubmitProps) => {
-		// const loggedInResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/auth/login`, {
-		// 	method: "POST",
-		// 	headers: { "Content-Type": "application/json" },
-		// 	body: JSON.stringify(values),
-		// });
-		// const loggedIn = await loggedInResponse.json();
 		const loggedInResponse = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/login`, {
 			email: values.email,
 			password: values.password,
 		}, {
 			headers: {
 				"Content-Type": "application/json"
-			}
+			},
+			withCredentials: true,
 		})
 
 		const loggedIn = loggedInResponse.data;
@@ -101,12 +97,12 @@ const Form = () => {
 			dispatch(
 				setLogin({
 					user: loggedIn.user,
-					token: loggedIn.token,
 				})
 			);
 			navigate("/home");
 		}
 	};
+
 
 	const handleFormSubmit = async (values, onSubmitProps) => {
 		if (isLogin) await login(values, onSubmitProps);
@@ -115,6 +111,7 @@ const Form = () => {
 
 	return (
 		<Formik
+			key={pageType}
 			onSubmit={handleFormSubmit}
 			initialValues={isLogin ? initialValuesLogin : initialValuesRegister}
 			validationSchema={isLogin ? loginSchema : registerSchema}
