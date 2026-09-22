@@ -19,7 +19,9 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: "A profile image is required" });
     }
 
-    const existingUser = await User.findOne({ email });
+    // Prevent NoSQL Injection by ensuring email is strictly a string
+    const safeEmail = String(email);
+    const existingUser = await User.findOne({ email: safeEmail });
     if (existingUser) {
       return res.status(400).json({ error: "An account with this email already exists." });
     }
@@ -53,10 +55,15 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email: email });
+
+    // Prevent NoSQL Injection by ensuring inputs are strictly strings
+    const safeEmail = String(email);
+    const safePassword = String(password);
+
+    const user = await User.findOne({ email: safeEmail });
     if (!user) return res.status(400).json({ msg: "User does not exist. " });
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(safePassword, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid credentials. " });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
