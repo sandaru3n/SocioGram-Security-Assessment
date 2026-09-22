@@ -18,6 +18,12 @@ export const register = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "A profile image is required" });
     }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "An account with this email already exists." });
+    }
+
     const picturePath = req.file.filename;
 
     const salt = await bcrypt.genSalt();

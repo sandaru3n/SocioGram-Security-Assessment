@@ -6,6 +6,9 @@ import {
 	useMediaQuery,
 	Typography,
 	useTheme,
+	Snackbar,
+	Alert,
+	CircularProgress,
 } from "@mui/material";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { Formik } from "formik";
@@ -18,18 +21,49 @@ import FlexBetween from '../../components/flexBetween';
 import axios from 'axios';
 
 const registerSchema = yup.object().shape({
-	firstName: yup.string().required("required"),
-	lastName: yup.string().required("required"),
-	email: yup.string().email("invalid email").required("required"),
-	password: yup.string().required("required"),
-	location: yup.string().required("required"),
-	occupation: yup.string().required("required"),
-	picture: yup.string().required("required"),
+	firstName: yup
+		.string()
+		.trim()
+		.min(2, "First name must be at least 2 characters")
+		.max(50, "First name cannot exceed 50 characters")
+		.required("First name is required"),
+	lastName: yup
+		.string()
+		.trim()
+		.min(2, "Last name must be at least 2 characters")
+		.max(50, "Last name cannot exceed 50 characters")
+		.required("Last name is required"),
+	email: yup
+		.string()
+		.trim()
+		.email("Please provide a valid email address")
+		.required("Email is required"),
+	password: yup
+		.string()
+		.min(6, "Password must be at least 6 characters")
+		.required("Password is required"),
+	location: yup
+		.string()
+		.trim()
+		.required("Location is required"),
+	occupation: yup
+		.string()
+		.trim()
+		.required("Occupation is required"),
+	picture: yup
+		.mixed()
+		.required("Profile picture is required"),
 });
 
 const loginSchema = yup.object().shape({
-	email: yup.string().email("invalid email").required("required"),
-	password: yup.string().required("required"),
+	email: yup
+		.string()
+		.trim()
+		.email("Please provide a valid email address")
+		.required("Email is required"),
+	password: yup
+		.string()
+		.required("Password is required"),
 });
 
 const initialValuesRegister = {
@@ -49,6 +83,12 @@ const initialValuesLogin = {
 
 const Form = () => {
 	const [pageType, setPageType] = useState("login");
+	const [toast, setToast] = useState({
+		open: false,
+		message: "",
+		severity: "info", // "success" | "error" | "info" | "warning"
+	});
+
 	const { palette } = useTheme();
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
@@ -56,53 +96,101 @@ const Form = () => {
 	const isLogin = pageType === "login";
 	const isRegister = pageType === "register";
 
+	const showNotification = (message, severity = "info") => {
+		setToast({
+			open: true,
+			message,
+			severity,
+		});
+	};
+
+	const handleCloseToast = (event, reason) => {
+		if (reason === "clickaway") return;
+		setToast((prev) => ({ ...prev, open: false }));
+	};
+
 	const register = async (values, onSubmitProps) => {
-		// this allows us to send form info with image
-		const formData = new FormData();
-		for (let value in values) {
-			formData.append(value, values[value]);
-		}
-		const savedUserResponse = await fetch(
-			`${process.env.REACT_APP_BACKEND_URL}/auth/register`,
-			{
-				method: "POST",
-				body: formData,
-				credentials: "include",
+		try {
+			const formData = new FormData();
+			for (let value in values) {
+				formData.append(value, values[value]);
 			}
-		);
-		const savedUser = await savedUserResponse.json();
-		if (!savedUserResponse.ok) {
-			alert(savedUser.error || "Registration failed");
-			return;
+
+			const savedUserResponse = await fetch(
+				`${process.env.REACT_APP_BACKEND_URL}/auth/register`,
+				{
+					method: "POST",
+					body: formData,
+					credentials: "include",
+				}
+			);
+			const savedUserData = await savedUserResponse.json();
+
+			if (!savedUserResponse.ok) {
+				const errorMsg =
+					savedUserData.error ||
+					savedUserData.message ||
+					savedUserData.msg ||
+					"Registration failed. Please try again.";
+				showNotification(errorMsg, "error");
+				return;
+			}
+
+			onSubmitProps.resetForm();
+			showNotification("Account registered successfully! Please sign in.", "success");
+			setPageType("login");
+		} catch (error) {
+			console.error("Register Error:", error);
+			showNotification("Network or server connection error. Please try again.", "error");
+		} finally {
+			onSubmitProps.setSubmitting(false);
 		}
-		onSubmitProps.resetForm();
-		setPageType("login");
 	};
 
 	const login = async (values, onSubmitProps) => {
-		const loggedInResponse = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/auth/login`, {
-			email: values.email,
-			password: values.password,
-		}, {
-			headers: {
-				"Content-Type": "application/json"
-			},
-			withCredentials: true,
-		})
-
-		const loggedIn = loggedInResponse.data;
-
-		onSubmitProps.resetForm();
-		if (loggedIn) {
-			dispatch(
-				setLogin({
-					user: loggedIn.user,
-				})
+		try {
+			const loggedInResponse = await axios.post(
+				`${process.env.REACT_APP_BACKEND_URL}/auth/login`,
+				{
+					email: values.email,
+					password: values.password,
+				},
+				{
+					headers: {
+						"Content-Type": "application/json",
+					},
+					withCredentials: true,
+				}
 			);
-			navigate("/home");
+
+			const loggedIn = loggedInResponse.data;
+
+			if (loggedIn && loggedIn.user) {
+				showNotification("Login successful! Redirecting...", "success");
+				dispatch(
+					setLogin({
+						user: loggedIn.user,
+					})
+				);
+				onSubmitProps.resetForm();
+				setTimeout(() => {
+					navigate("/home");
+				}, 600);
+			} else {
+				showNotification("Unexpected response from server. Please try again.", "error");
+			}
+		} catch (error) {
+			console.error("Login Error:", error);
+			const errorMsg =
+				error.response?.data?.msg ||
+				error.response?.data?.error ||
+				error.response?.data?.message ||
+				"Invalid email or password. Please try again.";
+			showNotification(errorMsg, "error");
+		} finally {
+			onSubmitProps.setSubmitting(false);
 		}
 	};
-
 
 	const handleFormSubmit = async (values, onSubmitProps) => {
 		if (isLogin) await login(values, onSubmitProps);
@@ -110,8 +198,9 @@ const Form = () => {
 	};
 
 	return (
-		<Formik
-			key={pageType}
+		<>
+			<Formik
+				key={pageType}
 			onSubmit={handleFormSubmit}
 			initialValues={isLogin ? initialValuesLogin : initialValuesRegister}
 			validationSchema={isLogin ? loginSchema : registerSchema}
@@ -125,6 +214,7 @@ const Form = () => {
 				handleSubmit,
 				setFieldValue,
 				resetForm,
+				isSubmitting,
 			}) => (
 				<form onSubmit={handleSubmit}>
 					<Box
@@ -183,7 +273,11 @@ const Form = () => {
 								/>
 								<Box
 									gridColumn="span 4"
-									border={`1px solid ${palette.neutral.medium}`}
+									border={`1px solid ${
+										Boolean(touched.picture) && Boolean(errors.picture)
+											? palette.error.main
+											: palette.neutral.medium
+									}`}
 									borderRadius="5px"
 									p="1rem"
 								>
@@ -196,22 +290,30 @@ const Form = () => {
 										maxSize={2 * 1024 * 1024}
 										multiple={false}
 										onDrop={(acceptedFiles) => {
-											if (acceptedFiles[0]) setFieldValue("picture", acceptedFiles[0]);
+											if (acceptedFiles[0]) {
+												setFieldValue("picture", acceptedFiles[0]);
+											}
 										}}
 										onDropRejected={() =>
-											alert("Only JPEG, PNG, or WebP images up to 2MB are allowed")
+											showNotification("Only JPEG, PNG, or WebP images up to 2MB are allowed", "warning")
 										}
 									>
 										{({ getRootProps, getInputProps }) => (
 											<Box
 												{...getRootProps()}
-												border={`2px dashed ${palette.primary.main}`}
+												border={`2px dashed ${
+													Boolean(touched.picture) && Boolean(errors.picture)
+														? palette.error.main
+														: palette.primary.main
+												}`}
 												p="1rem"
 												sx={{ "&:hover": { cursor: "pointer" } }}
 											>
 												<input {...getInputProps()} />
 												{!values.picture ? (
-													<p>Add Picture Here</p>
+													<Typography color={Boolean(touched.picture) && Boolean(errors.picture) ? "error" : "inherit"}>
+														Add Profile Picture Here *
+													</Typography>
 												) : (
 													<FlexBetween>
 														<Typography>{values.picture.name}</Typography>
@@ -221,6 +323,11 @@ const Form = () => {
 											</Box>
 										)}
 									</Dropzone>
+									{Boolean(touched.picture) && Boolean(errors.picture) && (
+										<Typography color="error" variant="caption" sx={{ mt: "0.5rem", display: "block" }}>
+											{errors.picture}
+										</Typography>
+									)}
 								</Box>
 							</>
 						)}
@@ -253,6 +360,7 @@ const Form = () => {
 						<Button
 							fullWidth
 							type="submit"
+							disabled={isSubmitting}
 							sx={{
 								m: "2rem 0",
 								p: "1rem",
@@ -261,7 +369,13 @@ const Form = () => {
 								"&:hover": { color: palette.primary.main },
 							}}
 						>
-							{isLogin ? "LOGIN" : "REGISTER"}
+							{isSubmitting ? (
+								<CircularProgress size={24} color="inherit" />
+							) : isLogin ? (
+								"LOGIN"
+							) : (
+								"REGISTER"
+							)}
 						</Button>
 						<Typography
 							onClick={() => {
@@ -285,6 +399,24 @@ const Form = () => {
 				</form>
 			)}
 		</Formik>
+
+		{/* FEEDBACK POPUP MESSAGE */}
+		<Snackbar
+			open={toast.open}
+			autoHideDuration={5000}
+			onClose={handleCloseToast}
+			anchorOrigin={{ vertical: "top", horizontal: "center" }}
+		>
+			<Alert
+				onClose={handleCloseToast}
+				severity={toast.severity}
+				variant="filled"
+				sx={{ width: "100%", boxShadow: 3 }}
+			>
+				{toast.message}
+			</Alert>
+		</Snackbar>
+	</>
 	);
 };
 
