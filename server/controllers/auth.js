@@ -51,6 +51,12 @@ export const register = async (req, res) => {
   }
 };
 
+export const AUTH_FAILURE_MSG = "Invalid email or password.";
+
+
+const DUMMY_PASSWORD_HASH =
+  "$2b$10$1evgTw.k1pTqPlRnOZYwL.1BZagbFkQqOQXPWwHByQirO.Szw04By";
+
 /* LOGGING IN */
 export const login = async (req, res) => {
   try {
@@ -61,10 +67,13 @@ export const login = async (req, res) => {
     const safePassword = String(password);
 
     const user = await User.findOne({ email: safeEmail });
-    if (!user) return res.status(400).json({ msg: "User does not exist. " });
 
-    const isMatch = await bcrypt.compare(safePassword, user.password);
-    if (!isMatch) return res.status(400).json({ msg: "Invalid credentials. " });
+    const hash = user?.password ?? DUMMY_PASSWORD_HASH;
+    const isMatch = await bcrypt.compare(safePassword, hash);
+
+    if (!user || !isMatch) {
+      return res.status(400).json({ msg: AUTH_FAILURE_MSG });
+    }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
     const userObj = user.toObject();
