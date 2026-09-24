@@ -138,6 +138,7 @@ export function serveAsset(req, res) {
   const contentType = IMAGE_CONTENT_TYPES[ext];
 
   res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Cache-Control", "private, no-store");
   if (contentType) {
     res.setHeader("Content-Type", contentType);
     res.setHeader("Content-Disposition", "inline");
