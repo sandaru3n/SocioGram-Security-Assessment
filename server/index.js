@@ -86,7 +86,7 @@ app.use(bodyParser.json({ limit: "30mb", extended: true }));
 app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
 app.use(cookieParser());
 
-app.get("/assets/:filename", serveAsset);
+app.get("/assets/:filename", verifyToken, serveAsset);
 app.options("*", cors(corsOptions));
 
 /* ROUTES WITH FILES */
