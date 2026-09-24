@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import {
 	Box,
 	Button,
@@ -9,6 +9,7 @@ import {
 	Snackbar,
 	Alert,
 	CircularProgress,
+	Divider,
 } from "@mui/material";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { Formik } from "formik";
@@ -19,6 +20,8 @@ import { setLogin } from "state";
 import Dropzone from "react-dropzone";
 import FlexBetween from '../../components/flexBetween';
 import axios from 'axios';
+import { GoogleLogin } from "@react-oauth/google";
+
 
 const registerSchema = yup.object().shape({
 	firstName: yup
@@ -196,6 +199,45 @@ const Form = () => {
 		if (isLogin) await login(values, onSubmitProps);
 		if (isRegister) await register(values, onSubmitProps);
 	};
+
+	/* GOOGLE OAUTH HANDLERS
+	 * handleGoogleSuccess â€” called by GoogleLogin when Google returns a credential (ID token).
+	 * We forward the token to our backend POST /auth/google which verifies it with Google's
+	 * public keys and either creates a new account or logs in the existing one, then sets
+	 * the same HTTP-only JWT cookie used by all other authenticated requests.
+	 */
+	const handleGoogleSuccess = async (credentialResponse) => {
+		try {
+			const response = await axios.post(
+				`${process.env.REACT_APP_BACKEND_URL}/auth/google`,
+				{ credential: credentialResponse.credential },
+				{
+					headers: { "Content-Type": "application/json" },
+					withCredentials: true, // Ensures the JWT cookie is stored by the browser
+				}
+			);
+			const data = response.data;
+			if (data && data.user) {
+				showNotification("Google sign-in successful! Redirecting...", "success");
+				dispatch(setLogin({ user: data.user }));
+				setTimeout(() => {
+					navigate("/home");
+				}, 600);
+			}
+		} catch (error) {
+			console.error("Google OAuth error:", error);
+			const errorMsg =
+				error.response?.data?.error ||
+				error.response?.data?.message ||
+				"Google sign-in failed. Please try again.";
+			showNotification(errorMsg, "error");
+		}
+	};
+
+	const handleGoogleError = () => {
+		showNotification("Google sign-in was cancelled or failed. Please try again.", "error");
+	};
+
 
 	return (
 		<>
@@ -377,6 +419,33 @@ const Form = () => {
 								"REGISTER"
 							)}
 						</Button>
+					{/* GOOGLE SIGN-IN — shown only on the login page.
+					    Uses OpenID Connect via Google Identity Services.
+					    On success the credential (ID token) is sent to POST /auth/google */}
+					{isLogin && (
+						<Box>
+							<Divider sx={{ my: "1rem" }}>
+								<Typography
+									variant="body2"
+									sx={{ color: palette.neutral.medium, px: 1 }}
+								>
+									OR CONTINUE WITH
+								</Typography>
+							</Divider>
+							<Box display="flex" justifyContent="center" mt="0.5rem" mb="1rem">
+								<GoogleLogin
+									onSuccess={handleGoogleSuccess}
+									onError={handleGoogleError}
+									useOneTap={false}
+									theme={palette.mode === "dark" ? "filled_black" : "outline"}
+									shape="rectangular"
+									size="large"
+									text="signin_with_google"
+									logo_alignment="left"
+								/>
+							</Box>
+						</Box>
+					)}
 						<Typography
 							onClick={() => {
 								setPageType(isLogin ? "register" : "login");
