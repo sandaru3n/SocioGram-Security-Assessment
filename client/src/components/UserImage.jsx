@@ -1,6 +1,9 @@
 import { Box } from '@mui/material';
 
 const UserImage = ({ image, size = "60px" }) => {
+	const isFullUrl = image && (image.startsWith('http://') || image.startsWith('https://'));
+	const imageSrc = isFullUrl ? image : `${process.env.REACT_APP_BACKEND_URL}/assets/${image}`;
+
 	return (
 
 		<Box
@@ -10,7 +13,8 @@ const UserImage = ({ image, size = "60px" }) => {
 				style={{ objectFit: "cover", borderRadius: "50%" }}
 				width={size} height={size}
 				alt="user"
-				src={`${process.env.REACT_APP_BACKEND_URL}/assets/${image}`}
+				src={imageSrc}
+				referrerPolicy="no-referrer"
 			/>
 		</Box>
 	);
