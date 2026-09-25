@@ -1,5 +1,6 @@
 import { Typography, useTheme } from "@mui/material";
 import FlexBetween from '../../components/flexBetween';
+import ProtectedImage from "components/ProtectedImage";
 import WidgetWrapper from "components/WidgetWrapper";
 
 const AdvertWidget = () => {
@@ -16,7 +17,7 @@ const AdvertWidget = () => {
 				</Typography>
 				<Typography color={medium}>Create Ad</Typography>
 			</FlexBetween>
-			<img
+			<ProtectedImage
 				width="100%"
 				height="auto"
 				alt="advert"

@@ -1,19 +1,26 @@
 import { Box } from '@mui/material';
+import ProtectedImage from './ProtectedImage';
 
 const UserImage = ({ image, size = "60px" }) => {
-	return (
+	const isFullUrl = image && (image.startsWith('http://') || image.startsWith('https://'));
+	const imageSrc = !image
+		? ""
+		: isFullUrl
+			? image
+			: `${process.env.REACT_APP_BACKEND_URL}/assets/${image}`;
 
-		<Box
-			width={size} height={size}
-		>
-			<img
+	return (
+		<Box width={size} height={size}>
+			<ProtectedImage
 				style={{ objectFit: "cover", borderRadius: "50%" }}
-				width={size} height={size}
+				width={size}
+				height={size}
 				alt="user"
-				src={`${process.env.REACT_APP_BACKEND_URL}/assets/${image}`}
+				src={imageSrc}
+				referrerPolicy="no-referrer"
 			/>
 		</Box>
 	);
-}
-// use exp shortcut for this export default
+};
+
 export default UserImage;

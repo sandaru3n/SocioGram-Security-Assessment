@@ -1,6 +1,11 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { OAuth2Client } from "google-auth-library";
+
+// Google OAuth2 client — used to verify ID tokens issued by Google Sign-In
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 /* REGISTER USER */
 export const register = async (req, res) => {
@@ -105,3 +110,83 @@ export const logout = (req, res) => {
   return res.status(200).json({ msg: "Logged out successfully" });
 };
 
+/* GOOGLE OAUTH — OpenID Connect (Authorization Code / ID-token grant)
+ *
+ * Flow:
+ *  1. Frontend uses @react-oauth/google to obtain a Google ID token (credential).
+ *  2. Frontend POSTs that credential to this endpoint.
+ *  3. We verify the token server-side using google-auth-library (OAuth2Client.verifyIdToken).
+ *  4. We extract the verified payload: sub (Google UID), email, given_name, family_name, picture.
+ *  5. We look up the user by googleId OR email.
+ *     - Found  → log them in (issue JWT cookie).
+ *     - Not found → auto-create account from Google profile, then issue JWT cookie.
+ *  6. The JWT cookie issued here is identical to the one from email/password login,
+ *     so all downstream verifyToken middleware works without any changes.
+ */
+export const googleAuth = async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ error: "Google credential token is required." });
+    }
+
+    // Verify the ID token issued by Google (OpenID Connect)
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, given_name: firstName, family_name: lastName, picture } = payload;
+
+    if (!email) {
+      return res.status(400).json({ error: "Google account does not have a verified email." });
+    }
+
+    // Try to find an existing user — first by googleId, then by email (for account linking)
+    let user = await User.findOne({ googleId });
+    if (!user) {
+      user = await User.findOne({ email: String(email) });
+    }
+
+    if (!user) {
+      // First-time Google sign-in → auto-create account from Google profile data
+      user = new User({
+        firstName: firstName || "Google",
+        lastName: lastName || "User",
+        email: String(email),
+        googleId,
+        // Google profile picture URL used as picturePath; no local upload required
+        picturePath: picture || "",
+        friends: [],
+        location: "",
+        occupation: "",
+        viewedProfile: Math.floor(Math.random() * 10000),
+        impressions: Math.floor(Math.random() * 10000),
+      });
+      await user.save();
+    } else if (!user.googleId) {
+      // Existing email/password account — link it to Google on first OAuth sign-in
+      user.googleId = googleId;
+      await user.save();
+    }
+
+    // Issue the same JWT cookie as the standard email/password login flow
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000, // 1 hour — matches JWT expiry
+      path: "/",
+    });
+
+    return res.status(200).json({ user: userObj });
+  } catch (err) {
+    console.error("Google OAuth error:", err);
+    return res.status(401).json({ error: "Google authentication failed. Please try again." });
+  }
+};
