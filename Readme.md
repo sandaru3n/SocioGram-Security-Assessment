@@ -1,107 +1,46 @@
-# MERN SocioGram - Soical Media Platform
+# SE4030 – SECURE SOFTWARE DEVELOPMENT
 
-This is a full-stack social media application built using the MERN (MongoDB, Express.js, React, Node.js) stack. It provides various features commonly found in social media platforms.
+## ASSIGNMENT README
 
-## Features
+**Project Title:** Security Assessment and Improvement of SocioGram
 
-### User Authentication
+**Application:** SocioGram – MERN Social Media Platform
 
-- **Registration**: Users can create accounts with unique usernames and passwords.
+**Group ID:** 38
 
-- **Login**: Registered users can log in to their accounts.
+## GROUP MEMBERS
 
-- **Authentication**: Token-based authentication is used to secure routes.
+1. M.S.N. Peiris  
+   Student ID: IT23201132
 
-### User Profiles
+2. M.T.C. Peiris  
+   Student ID: IT23201200
 
-- **View Profiles**: Users can view their own and others' profiles.
+3. Dilshan.N  
+   Student ID: IT23250574
 
-- **Profile Picture**: Users can upload and update their profile pictures.
+4. W A D A K Appuhamy  
+   Student ID: IT23479746
 
-- **Friend List**: Users can view their friends' list.
+## ORIGINAL PROJECT
 
-### Posts
+**Original GitHub Repository:**  
+https://github.com/AryanT10/SocialMedia_MERN
 
-- **Create Posts**: Users can create and publish posts with text and images.
+**Original Project Owner:**  
+ARYAN TUWAR
 
-- **Like Posts**: Users can like and unlike posts.
+**Reference:**  
+This project was obtained from a publicly available third-party GitHub repository. The original author and repository have been acknowledged. The original source was used only for academic security assessment and improvement.
 
-- **View Posts**: Users can view a feed of posts from friends.
+## MODIFIED PROJECT
 
-### Friendships
+**Modified GitHub Repository:**  
+https://github.com/sandaru3n/SocioGram-Security-Assessment
 
-- **Add Friends**: Users can send friend requests to others.
+## YOUTUBE DEMONSTRATION
 
-- **Accept/Reject Requests**: Users can accept or reject friend requests.
+**YouTube Video Link:**  
+https://youtu.be/_NW6HUW7iR8
 
-- **Remove Friends**: Users can remove friends from their friend list.
 
-### Dark and Light Mode
-
-- **Toggle Mode**: Users can switch between dark and light mode.
-
-## Technologies Used
-
-### Frontend
-
-- **React**: The user interface is built using React.
-
-- **Redux**: State management is handled with Redux.
-
-- **Material-UI**: Material-UI components provide the UI.
-
-- **React Router**: Used for client-side routing.
-
-- **Axios**: Used for making API requests.
-
-### Backend
-
-- **Node.js**: The server is built with Node.js.
-
-- **Express.js**: The Express.js framework is used for API routing.
-
-- **MongoDB**: Data is stored in a MongoDB database.
-
-- **Mongoose**: Mongoose is used as an Object Data Modeling (ODM) library for MongoDB.
-
-- **JWT**: JSON Web Tokens are used for user authentication.
-
-- **bcrypt**: Used for password hashing.
-
-- **Multer**: Handles file uploads.
-
-## Installation
-
-### Frontend
-
-1. Clone the repository.
-
-2. Navigate to the `frontend` directory.
-
-3. Run `npm install` to install dependencies.
-
-4. Create a `.env` file with your backend API URL (e.g., `REACT_APP_API_URL=http://localhost:3001`).
-
-5. Run `npm start` to start the frontend server.
-
-### Backend
-
-1. Clone the repository.
-
-2. Navigate to the `backend` directory.
-
-3. Run `npm install` to install dependencies.
-
-4. Create a `.env` file with your MongoDB URI, JWT secret, and other configurations.
-
-5. Run `npm start` to start the backend server.
-
-## Usage
-
-1. Register a new account or log in with existing credentials.
-
-2. Explore user profiles, send friend requests, and accept/reject requests.
-
-3. Create and like posts, toggle between dark and light mode.
-
-4. Enjoy the features of your MERN social media application!
