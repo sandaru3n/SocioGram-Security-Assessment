@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { randomBytes, randomInt } from "crypto";
 import User from "../models/User.js";
 import { OAuth2Client } from "google-auth-library";
 
@@ -45,8 +46,8 @@ export const register = async (req, res) => {
       friends,
       location,
       occupation,
-      viewedProfile: Math.floor(Math.random() * 10000),
-      impressions: Math.floor(Math.random() * 10000),
+      viewedProfile: randomInt(10000),
+      impressions: randomInt(10000),
     });
     const savedUser = await newUser.save();
     res.status(201).json(savedUser);
@@ -59,8 +60,9 @@ export const register = async (req, res) => {
 export const AUTH_FAILURE_MSG = "Invalid email or password.";
 
 
-const DUMMY_PASSWORD_HASH =
-  "$2b$10$1evgTw.k1pTqPlRnOZYwL.1BZagbFkQqOQXPWwHByQirO.Szw04By";
+// Generated at startup so unknown-email logins still pay the bcrypt cost (timing-safe)
+// without committing a password hash to source. Cost matches bcrypt.genSalt() default.
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync(randomBytes(32).toString("hex"), 10);
 
 /* LOGGING IN */
 export const login = async (req, res) => {
@@ -161,8 +163,8 @@ export const googleAuth = async (req, res) => {
         friends: [],
         location: "",
         occupation: "",
-        viewedProfile: Math.floor(Math.random() * 10000),
-        impressions: Math.floor(Math.random() * 10000),
+        viewedProfile: randomInt(10000),
+        impressions: randomInt(10000),
       });
       await user.save();
     } else if (!user.googleId) {
